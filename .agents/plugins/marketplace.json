@@ -1,0 +1,20 @@
+{
+  "name": "code80-image",
+  "interface": {
+    "displayName": "Code80 Image"
+  },
+  "plugins": [
+    {
+      "name": "code80-image",
+      "source": {
+        "source": "local",
+        "path": "./plugins/code80-image"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

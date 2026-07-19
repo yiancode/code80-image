@@ -1,0 +1,43 @@
+{
+  "name": "@code80/image-plugin",
+  "version": "0.1.0",
+  "description": "Code80 image generation and editing plugin for Codex.",
+  "license": "MIT",
+  "homepage": "https://github.com/yiancode/code80-image",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yiancode/code80-image.git",
+    "directory": "plugins/code80-image"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "notices": "node scripts/create-third-party-notices.mjs",
+    "prebuild": "npm run notices",
+    "build": "node scripts/build.mjs",
+    "selftest": "node mcp/server.cjs --self-test",
+    "smoke:stdio": "node scripts/smoke-stdio.mjs",
+    "preview": "node scripts/preview-server.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test test/**/*.test.ts",
+    "check": "npm run typecheck && npm test && npm run build && npm run selftest && npm run smoke:stdio",
+    "start:stdio": "node mcp/server.cjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.0.1",
+    "@modelcontextprotocol/sdk": "^1.20.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
+    "esbuild": "^0.25.5",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "code80-image",
+  "version": "0.1.0",
+  "description": "Generate and edit images through code80 GPT/Grok models or the current Agent.",
+  "author": {
+    "name": "yiancode",
+    "url": "https://github.com/yiancode"
+  },
+  "homepage": "https://github.com/yiancode/code80-image",
+  "repository": "https://github.com/yiancode/code80-image",
+  "license": "MIT",
+  "keywords": [
+    "images",
+    "batch",
+    "generation",
+    "grok",
+    "local",
+    "code80"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Code80 Image",
+    "shortDescription": "code80 \u672c\u5730\u6279\u91cf\u751f\u56fe\u4e0e\u56fe\u7247\u7f16\u8f91\u5de5\u4f5c\u53f0",
+    "longDescription": "Inspect local image folders, prepare prompts, generate or edit through code80 GPT/Grok models or the current Agent, add or recover tasks, monitor progress, and preview results. API keys stay on this computer.",
+    "developerName": "code80",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Open Code80 Image settings and configure a Code80 GPT/Grok model or Codex as my default image model",
+      "Inspect a local image folder and prepare a parallel generation batch",
+      "Show my recent image batches"
+    ],
+    "brandColor": "#2563EB",
+    "composerIcon": "./assets/code80-logo.png",
+    "logo": "./assets/code80-logo.png"
+  }
+}

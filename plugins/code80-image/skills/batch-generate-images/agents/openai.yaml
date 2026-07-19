@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code80 Image"
+  short_description: "通过 Code80 GPT/Grok 或 Codex 创建、编辑和管理本地图片批次"
+  default_prompt: "Use $batch-generate-images to complete this image request in Code80 Image with my configured default model."

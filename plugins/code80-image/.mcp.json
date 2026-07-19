@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "code80-image": {
+      "title": "Code80 Image",
+      "description": "Local image folders, code80 provider settings, parallel generation queues, previews, and follow-up edits.",
+      "command": "node",
+      "args": ["./mcp/server.cjs"],
+      "cwd": "."
+    }
+  }
+}
