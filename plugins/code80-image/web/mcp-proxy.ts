@@ -14,7 +14,7 @@ export function isTransientMcpProxyError(failure: unknown): boolean {
   return /MCP proxy request failed|MCP error\s+-32000/i.test(text);
 }
 
-export async function retryTransientMcpRead<T>(
+export async function retryTransientMcpOperation<T>(
   operation: () => Promise<T>,
   options: RetryOptions = {},
 ): Promise<T> {

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "@modelcontextprotocol/ext-apps";
 import "./styles.css";
-import { errorMessage, retryTransientMcpRead } from "./mcp-proxy.js";
+import { errorMessage, retryTransientMcpOperation } from "./mcp-proxy.js";
 
 type Tab = "batches" | "browse" | "settings";
 type JobState = "queued" | "running" | "succeeded" | "failed" | "canceled";
@@ -17,6 +17,17 @@ type State = { view: { tab: "batches" | "settings"; batchId?: string }; groups: 
 type ToolResponse = { structuredContent?: Record<string, unknown>; _meta?: Record<string, unknown>; isError?: boolean; content?: Array<{ type: string; text?: string }> };
 
 const app = new App({ name: "code80-image-workbench", version: "1.0.0" }, {}, { autoResize: true });
+const TRANSIENT_PROXY_RETRY_TOOLS = new Set([
+  "ui_get_local_state",
+  "ui_get_batch_state",
+  "ui_list_image_batches",
+  "ui_get_image_preview",
+  "ui_get_image_previews",
+  "ui_get_image_metadata",
+  "ui_test_provider_profile",
+  "ui_set_default_offering",
+  "ui_save_provider_profile",
+]);
 
 async function call(name: string, args: Record<string, unknown> = {}): Promise<ToolResponse> {
   return await app.callServerTool({ name, arguments: args }) as ToolResponse;
@@ -52,12 +63,17 @@ function useWorkbench() {
 
   async function run(name: string, args: Record<string, unknown> = {}): Promise<ToolResponse> {
     setError("");
-    try { const result = await call(name, args); await accept(result); return result; }
+    try {
+      const request = () => call(name, args);
+      const result = TRANSIENT_PROXY_RETRY_TOOLS.has(name) ? await retryTransientMcpOperation(request) : await request();
+      await accept(result);
+      return result;
+    }
     catch (failure) { const text = failure instanceof Error ? failure.message : String(failure); setError(text); throw failure; }
   }
 
   async function refresh(batchId?: string, tab: "batches" | "settings" = "batches"): Promise<void> {
-    const result = await retryTransientMcpRead(() => call("ui_get_local_state", { batchId, tab }));
+    const result = await retryTransientMcpOperation(() => call("ui_get_local_state", { batchId, tab }));
     await accept(result);
   }
 
@@ -198,7 +214,13 @@ function Settings({ state, run }: { state: State; run: (name: string, args?: Rec
   const [draft, setDraft] = useState({ ...initial, models: structuredClone(initial.models), credential: "" });
   const [busy, setBusy] = useState(false);
   useEffect(() => { const item = state.groups.find((group) => group.id === selectedId); const value = item || { id: undefined, name: state.suggestion.name, endpoint: state.suggestion.endpoint, parallelism: state.suggestion.parallelism, models: state.suggestion.models, hasCredential: false }; setDraft({ ...value, models: structuredClone(value.models), credential: "" }); }, [selectedId, state.groups.length]);
-  async function perform(name: string, args: Record<string, unknown>) { setBusy(true); try { await run(name, args); } finally { setBusy(false); } }
+  async function perform(name: string, args: Record<string, unknown>): Promise<boolean> { setBusy(true); try { await run(name, args); return true; } catch { return false; } finally { setBusy(false); } }
+  async function saveGroup(): Promise<void> {
+    const id = draft.id || crypto.randomUUID();
+    const models = draft.models.map((model) => ({ ...model, id: model.id || crypto.randomUUID() }));
+    setDraft({ ...draft, id, models });
+    if (await perform("ui_save_provider_profile", { id, name: draft.name, endpoint: draft.endpoint, parallelism: draft.parallelism, credential: draft.credential || undefined, models })) setSelectedId(id);
+  }
   function updateModel(index: number, change: Partial<GroupModel>) { setDraft((current) => ({ ...current, models: current.models.map((model, position) => position === index ? { ...model, ...change } : model) })); }
   return <main className="settings">
     <aside><button className="primary wide" onClick={() => setSelectedId("new")}>＋ 新建分组</button>{state.groups.map((group) => <button className={selectedId === group.id ? "selected" : ""} key={group.id} onClick={() => setSelectedId(group.id)}><strong>Code80</strong><span>{group.name} · {group.hasCredential ? "已保存密钥" : "缺少密钥"}</span></button>)}</aside>
@@ -207,11 +229,11 @@ function Settings({ state, run }: { state: State; run: (name: string, args?: Rec
       <div className="form-grid"><label>分组名称<input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })}/></label><label>并发数<input type="number" min={1} max={12} value={draft.parallelism} onChange={(event) => setDraft({ ...draft, parallelism: Number(event.target.value) })}/></label></div>
       <label>Code80 API 地址<input value={draft.endpoint} onChange={(event) => setDraft({ ...draft, endpoint: event.target.value })}/></label>
       <label>API Key <small>{draft.hasCredential ? `留空保留 ${state.secureStorage} 中的现有密钥` : `将保存到 ${state.secureStorage}`}</small><input type="password" value={draft.credential} onChange={(event) => setDraft({ ...draft, credential: event.target.value })} placeholder={draft.hasCredential ? "•••••••• 已安全保存" : "输入该分组的 API Key"}/></label>
-      <div className="connection-actions"><button disabled={busy} onClick={() => perform("ui_test_provider_profile", { endpoint: draft.endpoint, groupId: draft.id, credential: draft.credential || undefined })}>测试连接</button><button className="primary" disabled={busy} onClick={() => perform("ui_save_provider_profile", { id: draft.id, name: draft.name, endpoint: draft.endpoint, parallelism: draft.parallelism, credential: draft.credential || undefined, models: draft.models })}>保存分组</button></div>
+      <div className="connection-actions"><button disabled={busy} onClick={() => void perform("ui_test_provider_profile", { endpoint: draft.endpoint, groupId: draft.id, credential: draft.credential || undefined })}>测试连接</button><button className="primary" disabled={busy} onClick={() => void saveGroup()}>保存分组</button></div>
       <div className="model-heading"><h3>模型</h3><button onClick={() => setDraft({ ...draft, models: [...draft.models, { id: "", model: "", label: "", sizes: [], qualities: [], canGenerate: true, canEdit: true, price: { mode: "unknown", currency: "CNY" } }] })}>＋ 添加模型</button></div>
       <div className="models">{draft.models.map((model, index) => <article key={`${model.id}-${index}`}><b>{String(index + 1).padStart(2, "0")}</b><label>显示名称<input value={model.label} onChange={(event) => updateModel(index, { label: event.target.value })}/></label><label>Code80 模型 ID<input value={model.model} onChange={(event) => updateModel(index, { model: event.target.value })}/></label><button className="icon danger" onClick={() => setDraft({ ...draft, models: draft.models.filter((_, position) => position !== index) })}>×</button></article>)}</div>
       <div className="default-model"><label>默认模型<select value={state.defaultModelId || ""} onChange={(event) => event.target.value && void perform("ui_set_default_offering", { offeringId: event.target.value })}><option value="">请选择</option>{state.choices.map((model) => <option key={model.id} value={model.id}>{model.providerName} · {model.groupName} · {model.label}</option>)}</select></label></div>
-      {draft.id && <button className="danger" onClick={() => perform("ui_delete_provider_profile", { id: draft.id })}>删除此分组</button>}
+      {draft.id && <button className="danger" onClick={() => void perform("ui_delete_provider_profile", { id: draft.id })}>删除此分组</button>}
     </section>
   </main>;
 }

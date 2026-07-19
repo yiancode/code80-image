@@ -48,7 +48,12 @@ function appMeta(visibility: Array<"model" | "app"> = ["model", "app"]): Record<
   return { ui: { visibility } };
 }
 
-function appOnly(): Record<string, unknown> { return { ui: { visibility: ["app"] } }; }
+function appProxyMeta(): Record<string, unknown> {
+  // Codex Desktop currently discovers the App proxy's callable tools from the
+  // model-visible list. Keeping "app" visibility preserves UI access while
+  // "model" visibility makes those calls routable in affected Desktop builds.
+  return appMeta();
+}
 
 function resolveImage(batch: BatchView, imageId: string): { file: string; label: string } {
   const job = batch.jobs.find((entry) => entry.id === imageId);
@@ -245,33 +250,33 @@ export function createCode80ImageServer(options: {
 
 function registerUiTools(server: McpServer, options: { version: string; settings: SettingsService; batches: BatchService }): void {
   registerAppTool(server, "ui_get_local_state", {
-    title: "Refresh workbench", description: "仅供 Code80 Image 界面刷新。", inputSchema: { batchId: z.string().optional(), tab: z.enum(["batches", "settings"]).default("batches") }, annotations: { readOnlyHint: true }, _meta: appOnly()
+    title: "Refresh workbench", description: "仅供 Code80 Image 界面刷新。", inputSchema: { batchId: z.string().optional(), tab: z.enum(["batches", "settings"]).default("batches") }, annotations: { readOnlyHint: true }, _meta: appProxyMeta()
   }, async ({ batchId, tab }) => text("工作台状态已刷新。", await workbenchState(options.settings, options.batches, tab, batchId)));
 
   registerAppTool(server, "ui_get_batch_state", {
-    title: "Refresh batch", description: "仅供界面刷新一个批次。", inputSchema: { batchId: z.string().min(1) }, annotations: { readOnlyHint: true }, _meta: appOnly()
+    title: "Refresh batch", description: "仅供界面刷新一个批次。", inputSchema: { batchId: z.string().min(1) }, annotations: { readOnlyHint: true }, _meta: appProxyMeta()
   }, async ({ batchId }) => batchResult(options.batches.get(batchId)));
 
   registerAppTool(server, "ui_list_image_batches", {
-    title: "Browse batches", description: "仅供界面分页浏览批次。", inputSchema: { page: z.number().int().min(1).default(1), pageSize: z.number().int().min(4).max(20).default(8) }, annotations: { readOnlyHint: true }, _meta: appOnly()
+    title: "Browse batches", description: "仅供界面分页浏览批次。", inputSchema: { page: z.number().int().min(1).default(1), pageSize: z.number().int().min(4).max(20).default(8) }, annotations: { readOnlyHint: true }, _meta: appProxyMeta()
   }, async ({ page, pageSize }) => text("批次列表已加载。", options.batches.listPage(page, pageSize)));
 
   registerAppTool(server, "ui_save_provider_profile", {
     title: "Save Code80 group", description: "保存一个拥有独立 API Key 的 Code80 分组。密钥不会返回给界面或模型。",
     inputSchema: { id: z.string().optional(), name: z.string().min(1).max(100), endpoint: z.string().url(), parallelism: z.number().int().min(1).max(12), credential: z.string().max(1000).optional(), models: z.array(modelSchema).min(1).max(50) },
-    annotations: { readOnlyHint: false }, _meta: appOnly()
+    annotations: { readOnlyHint: false }, _meta: appProxyMeta()
   }, async (input) => {
     await options.settings.saveGroup({ ...input, models: input.models as ModelDefinition[] });
     return text("Code80 分组已保存。", await workbenchState(options.settings, options.batches, "settings"));
   });
 
   registerAppTool(server, "ui_delete_provider_profile", {
-    title: "Delete Code80 group", description: "删除 Code80 分组及其独立密钥。", inputSchema: { id: z.string().min(1) }, annotations: { destructiveHint: true }, _meta: appOnly()
+    title: "Delete Code80 group", description: "删除 Code80 分组及其独立密钥。", inputSchema: { id: z.string().min(1) }, annotations: { destructiveHint: true }, _meta: appProxyMeta()
   }, async ({ id }) => { await options.settings.deleteGroup(id); return text("分组已删除。", await workbenchState(options.settings, options.batches, "settings")); });
 
   registerAppTool(server, "ui_test_provider_profile", {
     title: "Test Code80 group", description: "测试 Code80 地址和分组密钥，并读取可用模型。",
-    inputSchema: { endpoint: z.string().url(), groupId: z.string().optional(), credential: z.string().max(1000).optional() }, annotations: { readOnlyHint: true, openWorldHint: true }, _meta: appOnly()
+    inputSchema: { endpoint: z.string().url(), groupId: z.string().optional(), credential: z.string().max(1000).optional() }, annotations: { readOnlyHint: true, openWorldHint: true }, _meta: appProxyMeta()
   }, async ({ endpoint, groupId, credential }) => {
     const key = credential?.trim() || (groupId ? await options.settings.vault.get(groupId) : undefined);
     if (!key) throw new Error("请输入 API Key，或先保存该分组密钥。");
@@ -280,12 +285,12 @@ function registerUiTools(server: McpServer, options: { version: string; settings
   });
 
   registerAppTool(server, "ui_set_default_offering", {
-    title: "Set default model", description: "设置默认生图模型。", inputSchema: { offeringId: z.string().min(1) }, annotations: { readOnlyHint: false }, _meta: appOnly()
+    title: "Set default model", description: "设置默认生图模型。", inputSchema: { offeringId: z.string().min(1) }, annotations: { readOnlyHint: false }, _meta: appProxyMeta()
   }, async ({ offeringId }) => { await options.settings.setDefault(offeringId); return text("默认模型已更新。", await workbenchState(options.settings, options.batches, "settings")); });
 
   registerAppTool(server, "ui_get_image_previews", {
     title: "Load image previews", description: "把本地图片预览仅返回给插件界面。",
-    inputSchema: { batchId: z.string().min(1), items: z.array(z.object({ jobId: z.string().min(1), full: z.boolean().default(false) })).min(1).max(16) }, annotations: { readOnlyHint: true }, _meta: appOnly()
+    inputSchema: { batchId: z.string().min(1), items: z.array(z.object({ jobId: z.string().min(1), full: z.boolean().default(false) })).min(1).max(16) }, annotations: { readOnlyHint: true }, _meta: appProxyMeta()
   }, async ({ batchId, items }) => {
     const batch = options.batches.get(batchId);
     const previews = await Promise.all(items.map(async ({ jobId }) => {
@@ -297,7 +302,7 @@ function registerUiTools(server: McpServer, options: { version: string; settings
 
   registerAppTool(server, "ui_get_image_preview", {
     title: "Load image preview", description: "把单张本地图片预览仅返回给插件界面。",
-    inputSchema: { batchId: z.string().min(1), jobId: z.string().min(1), full: z.boolean().default(false) }, annotations: { readOnlyHint: true }, _meta: appOnly()
+    inputSchema: { batchId: z.string().min(1), jobId: z.string().min(1), full: z.boolean().default(false) }, annotations: { readOnlyHint: true }, _meta: appProxyMeta()
   }, async ({ batchId, jobId }) => {
     const image = resolveImage(options.batches.get(batchId), jobId);
     return text("图片预览已加载。", { batchId, jobId, available: true }, { dataUrl: await asDataUrl(image.file) });
@@ -305,41 +310,41 @@ function registerUiTools(server: McpServer, options: { version: string; settings
 
   registerAppTool(server, "ui_get_image_metadata", {
     title: "Read image metadata", description: "读取本地图片尺寸与文件大小。",
-    inputSchema: { batchId: z.string().min(1), jobId: z.string().min(1) }, annotations: { readOnlyHint: true }, _meta: appOnly()
+    inputSchema: { batchId: z.string().min(1), jobId: z.string().min(1) }, annotations: { readOnlyHint: true }, _meta: appProxyMeta()
   }, async ({ batchId, jobId }) => {
     const image = resolveImage(options.batches.get(batchId), jobId);
     return text("图片信息已读取。", { batchId, jobId, available: true, ...(await imageMetadata(image.file)) });
   });
 
   registerAppTool(server, "ui_open_batch_folder", {
-    title: "Open output folder", description: "在系统文件管理器中打开批次目录。", inputSchema: { batchId: z.string().min(1) }, annotations: { readOnlyHint: true }, _meta: appOnly()
+    title: "Open output folder", description: "在系统文件管理器中打开批次目录。", inputSchema: { batchId: z.string().min(1) }, annotations: { readOnlyHint: true }, _meta: appProxyMeta()
   }, async ({ batchId }) => { const folder = options.batches.get(batchId).outputDirectory; await openDirectory(folder); return text("输出目录已打开。", { opened: true, path: folder }); });
 
   registerAppTool(server, "ui_save_image_as", {
-    title: "Save image as", description: "使用系统保存对话框复制图片。", inputSchema: { batchId: z.string().min(1), jobId: z.string().min(1) }, annotations: { readOnlyHint: false }, _meta: appOnly()
+    title: "Save image as", description: "使用系统保存对话框复制图片。", inputSchema: { batchId: z.string().min(1), jobId: z.string().min(1) }, annotations: { readOnlyHint: false }, _meta: appProxyMeta()
   }, async ({ batchId, jobId }) => { const image = resolveImage(options.batches.get(batchId), jobId); const destination = await saveAs(image.file, image.label); return text(destination ? `已保存到 ${destination}` : "已取消保存。", { saved: Boolean(destination), canceled: !destination, path: destination }); });
 
   registerAppTool(server, "ui_copy_image_to_clipboard", {
-    title: "Copy image", description: "把本地图片复制到系统剪贴板。", inputSchema: { batchId: z.string().min(1), jobId: z.string().min(1) }, annotations: { readOnlyHint: false }, _meta: appOnly()
+    title: "Copy image", description: "把本地图片复制到系统剪贴板。", inputSchema: { batchId: z.string().min(1), jobId: z.string().min(1) }, annotations: { readOnlyHint: false }, _meta: appProxyMeta()
   }, async ({ batchId, jobId }) => { await copyToClipboard(resolveImage(options.batches.get(batchId), jobId).file); return text("图片已复制。", { copied: true }); });
 
   registerAppTool(server, "ui_cancel_queued_jobs", {
-    title: "Cancel queued jobs", description: "取消尚未发送的任务。", inputSchema: { batchId: z.string().min(1), jobIds: z.array(z.string()).max(50).optional() }, annotations: { readOnlyHint: false }, _meta: appOnly()
+    title: "Cancel queued jobs", description: "取消尚未发送的任务。", inputSchema: { batchId: z.string().min(1), jobIds: z.array(z.string()).max(50).optional() }, annotations: { readOnlyHint: false }, _meta: appProxyMeta()
   }, async ({ batchId, jobIds }) => batchResult(await options.batches.cancel(batchId, jobIds)));
 
   registerAppTool(server, "ui_retry_jobs", {
-    title: "Retry jobs", description: "重试失败或取消的任务。", inputSchema: { batchId: z.string().min(1), jobIds: z.array(z.string()).min(1).max(50), allowUnknownCharge: z.boolean().default(false) }, annotations: { readOnlyHint: false, openWorldHint: true }, _meta: appOnly()
+    title: "Retry jobs", description: "重试失败或取消的任务。", inputSchema: { batchId: z.string().min(1), jobIds: z.array(z.string()).min(1).max(50), allowUnknownCharge: z.boolean().default(false) }, annotations: { readOnlyHint: false, openWorldHint: true }, _meta: appProxyMeta()
   }, async ({ batchId, jobIds, allowUnknownCharge }) => batchResult(await options.batches.retry(batchId, jobIds, allowUnknownCharge)));
 
   registerAppTool(server, "ui_delete_code80_images", {
-    title: "Delete images", description: "删除准确的图片 ID。", inputSchema: { batchId: z.string().min(1), imageIds: z.array(z.string()).min(1).max(50) }, annotations: { destructiveHint: true }, _meta: appOnly()
+    title: "Delete images", description: "删除准确的图片 ID。", inputSchema: { batchId: z.string().min(1), imageIds: z.array(z.string()).min(1).max(50) }, annotations: { destructiveHint: true }, _meta: appProxyMeta()
   }, async ({ batchId, imageIds }) => batchResult(await options.batches.deleteImages(batchId, imageIds)));
 
   registerAppTool(server, "ui_delete_image_batch", {
-    title: "Delete batch", description: "删除已经结束的本地批次。", inputSchema: { batchId: z.string().min(1) }, annotations: { destructiveHint: true }, _meta: appOnly()
+    title: "Delete batch", description: "删除已经结束的本地批次。", inputSchema: { batchId: z.string().min(1) }, annotations: { destructiveHint: true }, _meta: appProxyMeta()
   }, async ({ batchId }) => { await options.batches.delete(batchId); return text("批次已删除。", await workbenchState(options.settings, options.batches, "batches")); });
 
   registerAppTool(server, "ui_check_for_updates", {
-    title: "Check updates", description: "返回当前插件版本。", inputSchema: {}, annotations: { readOnlyHint: true }, _meta: appOnly()
+    title: "Check updates", description: "返回当前插件版本。", inputSchema: {}, annotations: { readOnlyHint: true }, _meta: appProxyMeta()
   }, async () => text("版本信息已读取。", { update: { currentVersion: options.version, latestVersion: options.version, updateAvailable: false, checked: true, checkedAt: new Date().toISOString(), releaseUrl: "https://github.com/yiancode/code80-image/releases" } }));
 }

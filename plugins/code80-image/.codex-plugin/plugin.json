@@ -1,6 +1,6 @@
 {
   "name": "code80-image",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Generate and edit images through code80 GPT/Grok models or the current Agent.",
   "author": {
     "name": "yiancode",

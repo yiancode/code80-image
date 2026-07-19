@@ -29165,8 +29165,8 @@ function viewMeta() {
 function appMeta(visibility = ["model", "app"]) {
   return { ui: { visibility } };
 }
-function appOnly() {
-  return { ui: { visibility: ["app"] } };
+function appProxyMeta() {
+  return appMeta();
 }
 function resolveImage(batch, imageId) {
   const job = batch.jobs.find((entry) => entry.id === imageId);
@@ -29383,28 +29383,28 @@ function registerUiTools(server, options) {
     description: "\u4EC5\u4F9B Code80 Image \u754C\u9762\u5237\u65B0\u3002",
     inputSchema: { batchId: external_exports2.string().optional(), tab: external_exports2.enum(["batches", "settings"]).default("batches") },
     annotations: { readOnlyHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId, tab }) => text("\u5DE5\u4F5C\u53F0\u72B6\u6001\u5DF2\u5237\u65B0\u3002", await workbenchState(options.settings, options.batches, tab, batchId)));
   K3(server, "ui_get_batch_state", {
     title: "Refresh batch",
     description: "\u4EC5\u4F9B\u754C\u9762\u5237\u65B0\u4E00\u4E2A\u6279\u6B21\u3002",
     inputSchema: { batchId: external_exports2.string().min(1) },
     annotations: { readOnlyHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId }) => batchResult(options.batches.get(batchId)));
   K3(server, "ui_list_image_batches", {
     title: "Browse batches",
     description: "\u4EC5\u4F9B\u754C\u9762\u5206\u9875\u6D4F\u89C8\u6279\u6B21\u3002",
     inputSchema: { page: external_exports2.number().int().min(1).default(1), pageSize: external_exports2.number().int().min(4).max(20).default(8) },
     annotations: { readOnlyHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ page, pageSize }) => text("\u6279\u6B21\u5217\u8868\u5DF2\u52A0\u8F7D\u3002", options.batches.listPage(page, pageSize)));
   K3(server, "ui_save_provider_profile", {
     title: "Save Code80 group",
     description: "\u4FDD\u5B58\u4E00\u4E2A\u62E5\u6709\u72EC\u7ACB API Key \u7684 Code80 \u5206\u7EC4\u3002\u5BC6\u94A5\u4E0D\u4F1A\u8FD4\u56DE\u7ED9\u754C\u9762\u6216\u6A21\u578B\u3002",
     inputSchema: { id: external_exports2.string().optional(), name: external_exports2.string().min(1).max(100), endpoint: external_exports2.string().url(), parallelism: external_exports2.number().int().min(1).max(12), credential: external_exports2.string().max(1e3).optional(), models: external_exports2.array(modelSchema).min(1).max(50) },
     annotations: { readOnlyHint: false },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async (input) => {
     await options.settings.saveGroup({ ...input, models: input.models });
     return text("Code80 \u5206\u7EC4\u5DF2\u4FDD\u5B58\u3002", await workbenchState(options.settings, options.batches, "settings"));
@@ -29414,7 +29414,7 @@ function registerUiTools(server, options) {
     description: "\u5220\u9664 Code80 \u5206\u7EC4\u53CA\u5176\u72EC\u7ACB\u5BC6\u94A5\u3002",
     inputSchema: { id: external_exports2.string().min(1) },
     annotations: { destructiveHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ id }) => {
     await options.settings.deleteGroup(id);
     return text("\u5206\u7EC4\u5DF2\u5220\u9664\u3002", await workbenchState(options.settings, options.batches, "settings"));
@@ -29424,7 +29424,7 @@ function registerUiTools(server, options) {
     description: "\u6D4B\u8BD5 Code80 \u5730\u5740\u548C\u5206\u7EC4\u5BC6\u94A5\uFF0C\u5E76\u8BFB\u53D6\u53EF\u7528\u6A21\u578B\u3002",
     inputSchema: { endpoint: external_exports2.string().url(), groupId: external_exports2.string().optional(), credential: external_exports2.string().max(1e3).optional() },
     annotations: { readOnlyHint: true, openWorldHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ endpoint, groupId, credential }) => {
     const key = credential?.trim() || (groupId ? await options.settings.vault.get(groupId) : void 0);
     if (!key) throw new Error("\u8BF7\u8F93\u5165 API Key\uFF0C\u6216\u5148\u4FDD\u5B58\u8BE5\u5206\u7EC4\u5BC6\u94A5\u3002");
@@ -29436,7 +29436,7 @@ function registerUiTools(server, options) {
     description: "\u8BBE\u7F6E\u9ED8\u8BA4\u751F\u56FE\u6A21\u578B\u3002",
     inputSchema: { offeringId: external_exports2.string().min(1) },
     annotations: { readOnlyHint: false },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ offeringId }) => {
     await options.settings.setDefault(offeringId);
     return text("\u9ED8\u8BA4\u6A21\u578B\u5DF2\u66F4\u65B0\u3002", await workbenchState(options.settings, options.batches, "settings"));
@@ -29446,7 +29446,7 @@ function registerUiTools(server, options) {
     description: "\u628A\u672C\u5730\u56FE\u7247\u9884\u89C8\u4EC5\u8FD4\u56DE\u7ED9\u63D2\u4EF6\u754C\u9762\u3002",
     inputSchema: { batchId: external_exports2.string().min(1), items: external_exports2.array(external_exports2.object({ jobId: external_exports2.string().min(1), full: external_exports2.boolean().default(false) })).min(1).max(16) },
     annotations: { readOnlyHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId, items }) => {
     const batch = options.batches.get(batchId);
     const previews = await Promise.all(items.map(async ({ jobId }) => {
@@ -29464,7 +29464,7 @@ function registerUiTools(server, options) {
     description: "\u628A\u5355\u5F20\u672C\u5730\u56FE\u7247\u9884\u89C8\u4EC5\u8FD4\u56DE\u7ED9\u63D2\u4EF6\u754C\u9762\u3002",
     inputSchema: { batchId: external_exports2.string().min(1), jobId: external_exports2.string().min(1), full: external_exports2.boolean().default(false) },
     annotations: { readOnlyHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId, jobId }) => {
     const image = resolveImage(options.batches.get(batchId), jobId);
     return text("\u56FE\u7247\u9884\u89C8\u5DF2\u52A0\u8F7D\u3002", { batchId, jobId, available: true }, { dataUrl: await asDataUrl(image.file) });
@@ -29474,7 +29474,7 @@ function registerUiTools(server, options) {
     description: "\u8BFB\u53D6\u672C\u5730\u56FE\u7247\u5C3A\u5BF8\u4E0E\u6587\u4EF6\u5927\u5C0F\u3002",
     inputSchema: { batchId: external_exports2.string().min(1), jobId: external_exports2.string().min(1) },
     annotations: { readOnlyHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId, jobId }) => {
     const image = resolveImage(options.batches.get(batchId), jobId);
     return text("\u56FE\u7247\u4FE1\u606F\u5DF2\u8BFB\u53D6\u3002", { batchId, jobId, available: true, ...await imageMetadata(image.file) });
@@ -29484,7 +29484,7 @@ function registerUiTools(server, options) {
     description: "\u5728\u7CFB\u7EDF\u6587\u4EF6\u7BA1\u7406\u5668\u4E2D\u6253\u5F00\u6279\u6B21\u76EE\u5F55\u3002",
     inputSchema: { batchId: external_exports2.string().min(1) },
     annotations: { readOnlyHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId }) => {
     const folder = options.batches.get(batchId).outputDirectory;
     await openDirectory(folder);
@@ -29495,7 +29495,7 @@ function registerUiTools(server, options) {
     description: "\u4F7F\u7528\u7CFB\u7EDF\u4FDD\u5B58\u5BF9\u8BDD\u6846\u590D\u5236\u56FE\u7247\u3002",
     inputSchema: { batchId: external_exports2.string().min(1), jobId: external_exports2.string().min(1) },
     annotations: { readOnlyHint: false },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId, jobId }) => {
     const image = resolveImage(options.batches.get(batchId), jobId);
     const destination = await saveAs(image.file, image.label);
@@ -29506,7 +29506,7 @@ function registerUiTools(server, options) {
     description: "\u628A\u672C\u5730\u56FE\u7247\u590D\u5236\u5230\u7CFB\u7EDF\u526A\u8D34\u677F\u3002",
     inputSchema: { batchId: external_exports2.string().min(1), jobId: external_exports2.string().min(1) },
     annotations: { readOnlyHint: false },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId, jobId }) => {
     await copyToClipboard(resolveImage(options.batches.get(batchId), jobId).file);
     return text("\u56FE\u7247\u5DF2\u590D\u5236\u3002", { copied: true });
@@ -29516,28 +29516,28 @@ function registerUiTools(server, options) {
     description: "\u53D6\u6D88\u5C1A\u672A\u53D1\u9001\u7684\u4EFB\u52A1\u3002",
     inputSchema: { batchId: external_exports2.string().min(1), jobIds: external_exports2.array(external_exports2.string()).max(50).optional() },
     annotations: { readOnlyHint: false },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId, jobIds }) => batchResult(await options.batches.cancel(batchId, jobIds)));
   K3(server, "ui_retry_jobs", {
     title: "Retry jobs",
     description: "\u91CD\u8BD5\u5931\u8D25\u6216\u53D6\u6D88\u7684\u4EFB\u52A1\u3002",
     inputSchema: { batchId: external_exports2.string().min(1), jobIds: external_exports2.array(external_exports2.string()).min(1).max(50), allowUnknownCharge: external_exports2.boolean().default(false) },
     annotations: { readOnlyHint: false, openWorldHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId, jobIds, allowUnknownCharge }) => batchResult(await options.batches.retry(batchId, jobIds, allowUnknownCharge)));
   K3(server, "ui_delete_code80_images", {
     title: "Delete images",
     description: "\u5220\u9664\u51C6\u786E\u7684\u56FE\u7247 ID\u3002",
     inputSchema: { batchId: external_exports2.string().min(1), imageIds: external_exports2.array(external_exports2.string()).min(1).max(50) },
     annotations: { destructiveHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId, imageIds }) => batchResult(await options.batches.deleteImages(batchId, imageIds)));
   K3(server, "ui_delete_image_batch", {
     title: "Delete batch",
     description: "\u5220\u9664\u5DF2\u7ECF\u7ED3\u675F\u7684\u672C\u5730\u6279\u6B21\u3002",
     inputSchema: { batchId: external_exports2.string().min(1) },
     annotations: { destructiveHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async ({ batchId }) => {
     await options.batches.delete(batchId);
     return text("\u6279\u6B21\u5DF2\u5220\u9664\u3002", await workbenchState(options.settings, options.batches, "batches"));
@@ -29547,7 +29547,7 @@ function registerUiTools(server, options) {
     description: "\u8FD4\u56DE\u5F53\u524D\u63D2\u4EF6\u7248\u672C\u3002",
     inputSchema: {},
     annotations: { readOnlyHint: true },
-    _meta: appOnly()
+    _meta: appProxyMeta()
   }, async () => text("\u7248\u672C\u4FE1\u606F\u5DF2\u8BFB\u53D6\u3002", { update: { currentVersion: options.version, latestVersion: options.version, updateAvailable: false, checked: true, checkedAt: (/* @__PURE__ */ new Date()).toISOString(), releaseUrl: "https://github.com/yiancode/code80-image/releases" } }));
 }
 
@@ -29702,13 +29702,13 @@ async function selfTest() {
   const manifest = JSON.parse(await (0, import_promises6.readFile)(import_node_path6.default.join(process.cwd(), ".codex-plugin", "plugin.json"), "utf8"));
   const widget = await (0, import_promises6.readFile)(import_node_path6.default.join(process.cwd(), "mcp", "widget.html"), "utf8");
   if (manifest.name !== "code80-image") throw new Error("\u63D2\u4EF6\u6E05\u5355\u540D\u79F0\u9519\u8BEF\u3002");
-  if (manifest.version !== "0.1.1") throw new Error("\u8FD0\u884C\u65F6\u7248\u672C\u4E0E\u63D2\u4EF6\u6E05\u5355\u4E0D\u4E00\u81F4\u3002");
+  if (manifest.version !== "0.1.2") throw new Error("\u8FD0\u884C\u65F6\u7248\u672C\u4E0E\u63D2\u4EF6\u6E05\u5355\u4E0D\u4E00\u81F4\u3002");
   if (widget.length < 1e4) throw new Error("\u63D2\u4EF6\u754C\u9762\u6784\u5EFA\u4EA7\u7269\u4E0D\u5B8C\u6574\u3002");
-  process.stdout.write(JSON.stringify({ status: "ok", version: "0.1.1", widgetBytes: Buffer.byteLength(widget), platform: process.platform }));
+  process.stdout.write(JSON.stringify({ status: "ok", version: "0.1.2", widgetBytes: Buffer.byteLength(widget), platform: process.platform }));
 }
 async function main() {
   if (process.argv.includes("--version")) {
-    process.stdout.write(`${"0.1.1"}
+    process.stdout.write(`${"0.1.2"}
 `);
     return;
   }
@@ -29722,9 +29722,9 @@ async function main() {
   const batches = new BatchService(layout, settings);
   await batches.initialize();
   const widgetHtml = await (0, import_promises6.readFile)(import_node_path6.default.join(process.cwd(), "mcp", "widget.html"), "utf8");
-  const server = createCode80ImageServer({ version: "0.1.1", widgetHtml, settings, batches });
+  const server = createCode80ImageServer({ version: "0.1.2", widgetHtml, settings, batches });
   await server.connect(new StdioServerTransport());
-  process.stderr.write(`Code80 Image ${"0.1.1"} ready at ${layout.root}
+  process.stderr.write(`Code80 Image ${"0.1.2"} ready at ${layout.root}
 `);
 }
 main().catch((error40) => {

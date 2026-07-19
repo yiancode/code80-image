@@ -29,8 +29,9 @@ server process and cached plugin files.
 
 If the workbench opens but reports `MCP error -32000: MCP proxy request failed`,
 first update to the latest plugin version and restart Codex. The plugin retries
-transient read-only proxy startup requests; it intentionally does not retry
-image creation or other write operations that could create duplicate charges.
+transient proxy startup requests for reads and idempotent settings updates; it
+intentionally does not retry image creation or other write operations that could
+create duplicate charges.
 
 ## Install with an Agent
 
