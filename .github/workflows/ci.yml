@@ -9,7 +9,12 @@ permissions:
 
 jobs:
   plugin:
-    runs-on: ubuntu-latest
+    name: Plugin (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     defaults:
       run:
         working-directory: plugins/code80-image

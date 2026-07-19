@@ -15,6 +15,23 @@ Create a new Codex task after installation. Open **Code80 Image settings** to
 add one local group for each Code80 API key, then configure the GPT/Grok models
 available to that group.
 
+## Update
+
+```bash
+codex plugin marketplace upgrade code80-image
+codex plugin remove code80-image@code80-image
+codex plugin add code80-image@code80-image
+```
+
+Completely quit and reopen Codex after updating, then create a new task. This is
+especially important on Windows because an existing task keeps the previous MCP
+server process and cached plugin files.
+
+If the workbench opens but reports `MCP error -32000: MCP proxy request failed`,
+first update to the latest plugin version and restart Codex. The plugin retries
+transient read-only proxy startup requests; it intentionally does not retry
+image creation or other write operations that could create duplicate charges.
+
 ## Install with an Agent
 
 If the `codex` CLI is installed and signed in on your computer, you can ask an

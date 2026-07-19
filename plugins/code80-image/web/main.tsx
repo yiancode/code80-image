@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "@modelcontextprotocol/ext-apps";
 import "./styles.css";
+import { errorMessage, retryTransientMcpRead } from "./mcp-proxy.js";
 
 type Tab = "batches" | "browse" | "settings";
 type JobState = "queued" | "running" | "succeeded" | "failed" | "canceled";
@@ -31,12 +32,14 @@ function useWorkbench() {
   const [notice, setNotice] = useState("");
   const [connected, setConnected] = useState(false);
   const selectedBatchId = useRef<string>();
+  const hasInitialState = useRef(false);
 
   async function accept(result: ToolResponse): Promise<void> {
     if (result.isError) throw new Error(message(result));
     const payload = result.structuredContent || {};
     if (payload.groups && payload.choices) {
       const next = payload as unknown as State;
+      hasInitialState.current = true;
       if (selectedBatchId.current && next.batches.some((batch) => batch.id === selectedBatchId.current)) next.activeBatch = next.batches.find((batch) => batch.id === selectedBatchId.current);
       setState(next);
     } else if (payload.batch) {
@@ -54,13 +57,19 @@ function useWorkbench() {
   }
 
   async function refresh(batchId?: string, tab: "batches" | "settings" = "batches"): Promise<void> {
-    const result = await call("ui_get_local_state", { batchId, tab });
+    const result = await retryTransientMcpRead(() => call("ui_get_local_state", { batchId, tab }));
     await accept(result);
   }
 
   useEffect(() => {
     app.ontoolresult = (result) => { void accept(result as ToolResponse); };
-    void app.connect().then(() => { setConnected(true); return refresh(); }).catch((failure) => setError(`无法连接 Code80 Image：${failure instanceof Error ? failure.message : String(failure)}`));
+    void app.connect().then(async () => {
+      setConnected(true);
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 250));
+      if (!hasInitialState.current) await refresh();
+    }).catch((failure) => {
+      if (!hasInitialState.current) setError(`无法连接 Code80 Image：${errorMessage(failure)}。请完全退出 Codex 后重新打开，再创建一个新任务。`);
+    });
     return () => { void app.close(); };
   }, []);
 
