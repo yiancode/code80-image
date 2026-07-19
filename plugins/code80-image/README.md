@@ -52,7 +52,8 @@ corresponding Agent.
 
 Create one group for every Code80 platform group whose API key or available model
 set differs. Each local group has its own endpoint, credential, concurrency limit,
-and model list. The initial catalog includes:
+and model list. New groups default to `https://dev.code80.ai`; existing groups
+are never changed automatically. The initial catalog includes:
 
 - `gpt-image-2`
 - `grok-imagine`

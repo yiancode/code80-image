@@ -13,7 +13,8 @@ codex plugin add code80-image@code80-image
 
 Create a new Codex task after installation. Open **Code80 Image settings** to
 add one local group for each Code80 API key, then configure the GPT/Grok models
-available to that group.
+available to that group. New groups use `https://dev.code80.ai` by default;
+existing groups keep their configured address until you change and save them.
 
 ## Update
 

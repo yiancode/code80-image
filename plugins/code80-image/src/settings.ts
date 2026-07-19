@@ -27,7 +27,7 @@ export class SettingsService {
 
   async suggestedGroup(): Promise<{ name: string; endpoint: string; parallelism: number; models: ModelDefinition[] }> {
     const current = await this.load();
-    return { name: nextGroupName(current.groups.map((group) => group.name)), endpoint: "https://code80.ai", parallelism: 3, models: code80Catalog() };
+    return { name: nextGroupName(current.groups.map((group) => group.name)), endpoint: "https://dev.code80.ai", parallelism: 3, models: code80Catalog() };
   }
 
   async saveGroup(input: {

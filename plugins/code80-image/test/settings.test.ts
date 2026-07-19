@@ -30,10 +30,12 @@ test("Code80 groups own independent credentials and settings never serialize the
 test("new groups receive distinct editable names and fresh catalog objects", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "code80-groups-"));
   const layout = localLayout({ CODE80_IMAGE_HOME: root }, process.platform);
-  const service = new SettingsService(layout, new MemoryCredentialVault());
-  await initializeLayout(layout);
+    const service = new SettingsService(layout, new MemoryCredentialVault());
+    await initializeLayout(layout);
   try {
-    assert.equal((await service.suggestedGroup()).name, "默认");
+    const firstSuggestion = await service.suggestedGroup();
+    assert.equal(firstSuggestion.name, "默认");
+    assert.equal(firstSuggestion.endpoint, "https://dev.code80.ai");
     await service.saveGroup({ ...(await service.suggestedGroup()), credential: "x" });
     const next = await service.suggestedGroup();
     assert.equal(next.name, "分组 2");
