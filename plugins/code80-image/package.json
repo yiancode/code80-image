@@ -21,7 +21,7 @@
     "smoke:stdio": "node scripts/smoke-stdio.mjs",
     "preview": "node scripts/preview-server.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test test/**/*.test.ts",
+    "test": "tsx --test test/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build && npm run selftest && npm run smoke:stdio",
     "start:stdio": "node mcp/server.cjs"
   },
