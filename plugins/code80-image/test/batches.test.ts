@@ -5,8 +5,8 @@ import path from "node:path";
 import test from "node:test";
 import { BatchService } from "../src/batches.js";
 import { code80Catalog } from "../src/catalog.js";
-import { AGENT_MODEL_ID } from "../src/domain.js";
-import { initializeLayout, localLayout, MemoryCredentialVault } from "../src/platform.js";
+import { AGENT_MODEL_ID, type ImageBatch } from "../src/domain.js";
+import { initializeLayout, localLayout, MemoryCredentialVault, readJson } from "../src/platform.js";
 import { SettingsService } from "../src/settings.js";
 
 async function fixture(parallelism = 2) {
@@ -19,9 +19,9 @@ async function fixture(parallelism = 2) {
   return { root, layout, settings, modelId: group.models[0]!.id };
 }
 
-async function waitFor(check: () => boolean, timeout = 2500): Promise<void> {
+async function waitFor(check: () => boolean | Promise<boolean>, timeout = 2500): Promise<void> {
   const started = Date.now();
-  while (!check()) {
+  while (!(await check())) {
     if (Date.now() - started > timeout) throw new Error("Timed out waiting for batch state.");
     await new Promise((resolve) => setTimeout(resolve, 15));
   }
@@ -45,6 +45,11 @@ test("provider batches obey group parallelism and persist unique files", async (
     assert.equal(peak, 2);
     assert.equal(done.succeeded, 3);
     assert.equal(new Set(done.jobs.map((job) => job.outputFile)).size, 3);
+    const batchFile = path.join(context.layout.batchDirectory, `${created.id}.json`);
+    await waitFor(async () => {
+      const persisted = await readJson<ImageBatch | undefined>(batchFile, undefined);
+      return persisted?.jobs.filter((job) => job.state === "succeeded").length === 3;
+    });
     const reloaded = new BatchService(context.layout, context.settings);
     await reloaded.initialize();
     assert.equal(reloaded.get(created.id).succeeded, 3);
