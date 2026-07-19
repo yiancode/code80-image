@@ -13,6 +13,28 @@ codex plugin add code80-image@code80-image
 
 Open a new Codex task after installation so the MCP server and skill are loaded.
 
+## Install with an Agent
+
+When the `codex` CLI is installed and signed in, paste either prompt into the
+corresponding Agent.
+
+### Codex
+
+> Install the Code80 Image plugin from
+> https://github.com/yiancode/code80-image. Add the
+> `yiancode/code80-image` Codex marketplace, install
+> `code80-image@code80-image`, verify that it is enabled, and remind me to open
+> a new Codex task afterward. Do not modify the plugin source.
+
+### Claude Code
+
+> Install Code80 Image for my local Codex app from
+> https://github.com/yiancode/code80-image. This is a Codex plugin, not a
+> Claude Code plugin. Run `codex plugin marketplace add yiancode/code80-image`,
+> then `codex plugin add code80-image@code80-image`, and verify it with
+> `codex plugin list`. Report the installed version and enabled status, and do
+> not modify the repository.
+
 ## What it does
 
 - Creates persistent batches containing 1–50 independent image jobs.

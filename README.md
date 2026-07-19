@@ -15,6 +15,34 @@ Create a new Codex task after installation. Open **Code80 Image settings** to
 add one local group for each Code80 API key, then configure the GPT/Grok models
 available to that group.
 
+## Install with an Agent
+
+If the `codex` CLI is installed and signed in on your computer, you can ask an
+Agent to complete the installation and verify it for you.
+
+### Codex
+
+Paste this into a Codex task:
+
+> Install the Code80 Image plugin from
+> https://github.com/yiancode/code80-image. Use the Codex CLI to add the
+> `yiancode/code80-image` marketplace, install
+> `code80-image@code80-image`, and verify that the plugin is enabled. Do not
+> change the plugin source. When finished, remind me to create a new Codex task
+> so the MCP server and skill are loaded.
+
+### Claude Code
+
+Paste this into Claude Code:
+
+> Install Code80 Image for my local Codex app from
+> https://github.com/yiancode/code80-image. This is a Codex plugin, not a
+> Claude Code plugin. In the terminal, run
+> `codex plugin marketplace add yiancode/code80-image`, then
+> `codex plugin add code80-image@code80-image`. Verify the installation with
+> `codex plugin list` and report the installed version and enabled status. Do
+> not modify the repository.
+
 ## Highlights
 
 - Persistent batches with 1–50 independent image jobs.
