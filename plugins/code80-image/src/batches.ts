@@ -108,6 +108,17 @@ export class BatchService {
     return batchView(batch);
   }
 
+  async waitForIdle(batchId: string): Promise<void> {
+    for (;;) {
+      const batch = this.mutable(batchId);
+      const hasQueuedProviderWork = batch.jobs.some((job) => job.model.adapter === "code80" && ["queued", "running"].includes(job.state));
+      const pendingWrite = this.writes.get(batchId);
+      if (!hasQueuedProviderWork && !(this.active.get(batchId) || 0) && !pendingWrite) return;
+      if (pendingWrite) await pendingWrite.catch(() => undefined);
+      else await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    }
+  }
+
   list(limit = 10): BatchView[] { return this.sorted().slice(0, limit).map(batchView); }
 
   listPage(page: number, pageSize: number): { batches: BatchView[]; page: number; pageSize: number; total: number; totalPages: number } {

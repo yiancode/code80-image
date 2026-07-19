@@ -20610,6 +20610,16 @@ var BatchService = class {
     if (!batch) throw new Error("\u627E\u4E0D\u5230\u6307\u5B9A\u7684 Code80 Image \u6279\u6B21\u3002");
     return batchView(batch);
   }
+  async waitForIdle(batchId) {
+    for (; ; ) {
+      const batch = this.mutable(batchId);
+      const hasQueuedProviderWork = batch.jobs.some((job) => job.model.adapter === "code80" && ["queued", "running"].includes(job.state));
+      const pendingWrite = this.writes.get(batchId);
+      if (!hasQueuedProviderWork && !(this.active.get(batchId) || 0) && !pendingWrite) return;
+      if (pendingWrite) await pendingWrite.catch(() => void 0);
+      else await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+  }
   list(limit = 10) {
     return this.sorted().slice(0, limit).map(batchView);
   }
@@ -29702,13 +29712,13 @@ async function selfTest() {
   const manifest = JSON.parse(await (0, import_promises6.readFile)(import_node_path6.default.join(process.cwd(), ".codex-plugin", "plugin.json"), "utf8"));
   const widget = await (0, import_promises6.readFile)(import_node_path6.default.join(process.cwd(), "mcp", "widget.html"), "utf8");
   if (manifest.name !== "code80-image") throw new Error("\u63D2\u4EF6\u6E05\u5355\u540D\u79F0\u9519\u8BEF\u3002");
-  if (manifest.version !== "0.1.2") throw new Error("\u8FD0\u884C\u65F6\u7248\u672C\u4E0E\u63D2\u4EF6\u6E05\u5355\u4E0D\u4E00\u81F4\u3002");
+  if (manifest.version !== "0.1.3") throw new Error("\u8FD0\u884C\u65F6\u7248\u672C\u4E0E\u63D2\u4EF6\u6E05\u5355\u4E0D\u4E00\u81F4\u3002");
   if (widget.length < 1e4) throw new Error("\u63D2\u4EF6\u754C\u9762\u6784\u5EFA\u4EA7\u7269\u4E0D\u5B8C\u6574\u3002");
-  process.stdout.write(JSON.stringify({ status: "ok", version: "0.1.2", widgetBytes: Buffer.byteLength(widget), platform: process.platform }));
+  process.stdout.write(JSON.stringify({ status: "ok", version: "0.1.3", widgetBytes: Buffer.byteLength(widget), platform: process.platform }));
 }
 async function main() {
   if (process.argv.includes("--version")) {
-    process.stdout.write(`${"0.1.2"}
+    process.stdout.write(`${"0.1.3"}
 `);
     return;
   }
@@ -29722,9 +29732,9 @@ async function main() {
   const batches = new BatchService(layout, settings);
   await batches.initialize();
   const widgetHtml = await (0, import_promises6.readFile)(import_node_path6.default.join(process.cwd(), "mcp", "widget.html"), "utf8");
-  const server = createCode80ImageServer({ version: "0.1.2", widgetHtml, settings, batches });
+  const server = createCode80ImageServer({ version: "0.1.3", widgetHtml, settings, batches });
   await server.connect(new StdioServerTransport());
-  process.stderr.write(`Code80 Image ${"0.1.2"} ready at ${layout.root}
+  process.stderr.write(`Code80 Image ${"0.1.3"} ready at ${layout.root}
 `);
 }
 main().catch((error40) => {

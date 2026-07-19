@@ -41,6 +41,7 @@ test("provider batches obey group parallelism and persist unique files", async (
   try {
     const created = await service.create({ prompt: "three views", count: 3 });
     await waitFor(() => service.get(created.id).state === "completed");
+    await service.waitForIdle(created.id);
     const done = service.get(created.id);
     assert.equal(peak, 2);
     assert.equal(done.succeeded, 3);
@@ -87,5 +88,6 @@ test("append and in-place modification preserve old image versions", async () =>
     const appended = await service.append(created.id, [{ prompt: "second" }]);
     assert.equal(appended.total, 2);
     await waitFor(() => service.get(created.id).state === "completed");
+    await service.waitForIdle(created.id);
   } finally { await rm(context.root, { recursive: true, force: true }); }
 });
