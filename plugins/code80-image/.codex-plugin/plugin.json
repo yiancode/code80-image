@@ -1,7 +1,7 @@
 {
   "name": "code80-image",
   "version": "0.1.4",
-  "description": "Generate and edit images through code80 GPT/Grok models or the current Agent.",
+  "description": "用 code80 的 GPT/Grok 模型或当前 Agent 生成和编辑图片。",
   "author": {
     "name": "yiancode",
     "url": "https://github.com/yiancode"
@@ -22,7 +22,7 @@
   "interface": {
     "displayName": "Code80 Image",
     "shortDescription": "code80 \u672c\u5730\u6279\u91cf\u751f\u56fe\u4e0e\u56fe\u7247\u7f16\u8f91\u5de5\u4f5c\u53f0",
-    "longDescription": "Inspect local image folders, prepare prompts, generate or edit through code80 GPT/Grok models or the current Agent, add or recover tasks, monitor progress, and preview results. API keys stay on this computer.",
+    "longDescription": "\u626b\u63cf\u672c\u5730\u56fe\u7247\u6587\u4ef6\u5939\u3001\u6574\u7406 Prompt\uff0c\u7528 code80 \u7684 GPT/Grok \u6a21\u578b\u6216\u5f53\u524d Agent \u751f\u6210\u548c\u7f16\u8f91\u56fe\u7247\uff0c\u8ffd\u52a0\u6216\u6062\u590d\u4efb\u52a1\uff0c\u67e5\u770b\u8fdb\u5ea6\u5e76\u9884\u89c8\u7ed3\u679c\u3002API Key \u53ea\u4fdd\u5b58\u5728\u4f60\u81ea\u5df1\u7684\u7535\u8111\u4e0a\u3002",
     "developerName": "code80",
     "category": "Productivity",
     "capabilities": [
@@ -31,9 +31,12 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Open Code80 Image settings and configure a Code80 GPT/Grok model or Codex as my default image model",
-      "Inspect a local image folder and prepare a parallel generation batch",
-      "Show my recent image batches"
+      "打开 Code80 Image 设置，新建一个分组并填入我的 Code80 API Key",
+      "把 gpt-image-2 设成我的默认生图模型",
+      "扫描一个本地图片文件夹，准备一批并行生图任务",
+      "用同一个 Prompt 生成 4 张不同的图",
+      "挑出上一批里的几张图，按我的要求改一版",
+      "看看我最近的生图批次"
     ],
     "brandColor": "#2563EB",
     "composerIcon": "./assets/code80-logo.png",
