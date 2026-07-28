@@ -8,25 +8,38 @@ image models or the current Codex Agent.
 
 ## Install
 
-### Check that your codex CLI supports plugins
+### Check that your codex CLI is recent enough
 
-`codex plugin` only exists in recent CLI builds. Run this first:
+`codex plugin` only exists in recent CLI builds. Measured on 0.116.0 it is
+absent; from 0.123.0 onward it is available. Run this first:
 
 ```bash
 codex plugin --help
 ```
 
-If it prints `error: unexpected argument 'plugin' found`, your codex CLI is too
-old — the npm package `@openai/codex` 0.116.0, for example, has no such command.
-Do not use the `codex` on your PATH in that case. Use the one shipped with the
-Codex desktop app instead; on macOS it is distributed inside ChatGPT.app and is
-usually newer:
+If it prints `error: unexpected argument 'plugin' found`, upgrade the CLI:
+
+```bash
+npm i -g @openai/codex@latest
+```
+
+Use `brew upgrade codex` if you installed it through Homebrew.
+
+nvm users need one extra check: codex is installed per node version, and
+switching node versions swaps which copy `codex` resolves to. Run `which -a
+codex` and `codex --version` before upgrading so you do not repeatedly upgrade a
+copy that is not the one on your PATH.
+
+On macOS, if you would rather not touch global npm packages, use the codex
+shipped with the Codex desktop app — it is distributed inside ChatGPT.app and is
+often newer than the npm build:
 
 ```bash
 /Applications/ChatGPT.app/Contents/Resources/codex plugin --help
 ```
 
-Substitute that full path for `codex` in the commands below.
+If you take that route, substitute the full path for `codex` in the commands
+below.
 
 ### Install the plugin
 
@@ -89,13 +102,14 @@ Paste this into a Codex task:
 
 > Install the Code80 Image plugin from
 > https://github.com/yiancode/code80-image. First run `codex plugin --help` to
-> confirm the CLI supports plugin subcommands; if it does not, use
-> `/Applications/ChatGPT.app/Contents/Resources/codex` instead. Then add the
-> `yiancode/code80-image` marketplace, install `code80-image@code80-image`, and
-> verify with `codex plugin list` that it is enabled. Do not change the plugin
-> source, and do not copy the skills folder into `~/.codex/skills/`. When
-> finished, remind me to create a new Codex task so the MCP server and skill are
-> loaded.
+> confirm the CLI supports plugin subcommands; if it reports
+> `unexpected argument`, upgrade with `npm i -g @openai/codex@latest` and retry
+> (if I use nvm, run `which -a codex` first so you upgrade the copy that is
+> actually on my PATH). Then add the `yiancode/code80-image` marketplace, install
+> `code80-image@code80-image`, and verify with `codex plugin list` that it is
+> enabled. Do not change the plugin source, and do not copy the skills folder
+> into `~/.codex/skills/`. When finished, remind me to create a new Codex task so
+> the MCP server and skill are loaded.
 
 ### Claude Code
 
@@ -103,9 +117,10 @@ Paste this into Claude Code:
 
 > Install Code80 Image for my local Codex app from
 > https://github.com/yiancode/code80-image. This is a Codex plugin, not a
-> Claude Code plugin. First check `codex --version` and `codex plugin --help`; if
-> that reports `unexpected argument`, use
-> `/Applications/ChatGPT.app/Contents/Resources/codex` instead. Then run
+> Claude Code plugin. First run `which -a codex`, `codex --version`, and
+> `codex plugin --help` to see which copy is on my PATH and whether it is recent
+> enough; if it reports `unexpected argument`, upgrade that copy with
+> `npm i -g @openai/codex@latest` and retry. Then run
 > `codex plugin marketplace add yiancode/code80-image`, then
 > `codex plugin add code80-image@code80-image`. Verify the installation with
 > `codex plugin list` and report the installed version and enabled status. Do not

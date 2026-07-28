@@ -7,24 +7,35 @@ Agent 完成本地批量生图、图片编辑、任务恢复和结果管理。
 
 ## 安装
 
-### 先确认 codex CLI 支持插件
+### 先确认 codex CLI 够新
 
-`codex plugin` 是较新版本才有的子命令。装之前先跑一次：
+`codex plugin` 是较新版本才有的子命令。实测 0.116.0 还没有，0.123.0 起可用。装之前
+先跑一次：
 
 ```bash
 codex plugin --help
 ```
 
-如果输出 `error: unexpected argument 'plugin' found`，说明你的 codex CLI 太旧
-（例如 npm 全局装的 `@openai/codex` 0.116.0 就没有这个命令）。此时不要用 PATH 上的
-`codex`，改用 Codex 桌面端自带的那个——macOS 上它随 ChatGPT.app 一起分发，版本通常
-更新：
+如果输出 `error: unexpected argument 'plugin' found`，升级 CLI：
+
+```bash
+npm i -g @openai/codex@latest
+```
+
+用 Homebrew 装的 codex 则是 `brew upgrade codex`。
+
+用 nvm 的话要多留一个心眼：codex 是按 node 版本分别装的，切换 node 版本会换掉
+`codex` 指向的副本。升级前先用 `which -a codex` 和 `codex --version` 看清当前命中的
+是哪一个，否则很容易在旧 node 版本下反复升级另一个副本。
+
+macOS 上如果不想动全局 npm 包，也可以直接用 Codex 桌面端内置的那个——它随
+ChatGPT.app 一起分发，版本通常比 npm 上的还新：
 
 ```bash
 /Applications/ChatGPT.app/Contents/Resources/codex plugin --help
 ```
 
-下面的命令里，把 `codex` 换成这个完整路径即可。
+走这条路的话，下面的命令里把 `codex` 全部换成这个完整路径。
 
 ### 安装插件
 
@@ -77,21 +88,22 @@ codex plugin add code80-image@code80-image
 贴进一个 Codex 任务：
 
 > 帮我安装 https://github.com/yiancode/code80-image 这个 Codex 插件。先跑
-> `codex plugin --help` 确认 CLI 支持插件子命令；如果不支持，改用
-> `/Applications/ChatGPT.app/Contents/Resources/codex`。然后添加
-> `yiancode/code80-image` 这个 marketplace，安装 `code80-image@code80-image`，用
-> `codex plugin list` 确认已启用。不要修改插件源码，也不要把 skills 目录手动拷到
-> `~/.codex/skills/`。装完提醒我新建一个 Codex 任务，好让 MCP 服务和技能加载。
+> `codex plugin --help` 确认 CLI 支持插件子命令；如果报 `unexpected argument`，用
+> `npm i -g @openai/codex@latest` 升级后重试（我用 nvm 的话，先用 `which -a codex`
+> 确认升级的是当前命中的那个副本）。然后添加 `yiancode/code80-image` 这个
+> marketplace，安装 `code80-image@code80-image`，用 `codex plugin list` 确认已启用。
+> 不要修改插件源码，也不要把 skills 目录手动拷到 `~/.codex/skills/`。装完提醒我新建
+> 一个 Codex 任务，好让 MCP 服务和技能加载。
 
 ### Claude Code
 
 贴进 Claude Code：
 
 > 帮我给本机的 Codex 装 https://github.com/yiancode/code80-image。注意这是 Codex
-> 插件，不是 Claude Code 插件。先用 `codex --version` 和 `codex plugin --help` 确认
-> CLI 版本够新；如果报 `unexpected argument`，改用
-> `/Applications/ChatGPT.app/Contents/Resources/codex`。然后依次执行
-> `codex plugin marketplace add yiancode/code80-image` 和
+> 插件，不是 Claude Code 插件。先用 `which -a codex`、`codex --version` 和
+> `codex plugin --help` 确认命中的是哪个副本、版本够不够新；如果报
+> `unexpected argument`，用 `npm i -g @openai/codex@latest` 升级那个副本后重试。然后
+> 依次执行 `codex plugin marketplace add yiancode/code80-image` 和
 > `codex plugin add code80-image@code80-image`，再用 `codex plugin list` 验证，把安装
 > 版本和启用状态报给我。不要修改这个仓库，也不要退化成手动拷贝 skills 目录。
 
