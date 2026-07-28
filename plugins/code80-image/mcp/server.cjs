@@ -29708,9 +29708,16 @@ var SettingsService = class {
 };
 
 // src/main.ts
+var MINIMUM_NODE_MAJOR = 20;
+var pluginRoot = import_node_path6.default.dirname(__dirname);
+function assertSupportedRuntime() {
+  const major = Number.parseInt(process.versions.node.split(".")[0] ?? "", 10);
+  if (Number.isFinite(major) && major >= MINIMUM_NODE_MAJOR) return;
+  throw new Error(`Code80 Image 需要 Node ${MINIMUM_NODE_MAJOR} 或更高版本，当前运行的是 ${process.versions.node}。请升级 Node，或把 .mcp.json 里的 command 换成新版 node 的完整路径。`);
+}
 async function selfTest() {
-  const manifest = JSON.parse(await (0, import_promises6.readFile)(import_node_path6.default.join(process.cwd(), ".codex-plugin", "plugin.json"), "utf8"));
-  const widget = await (0, import_promises6.readFile)(import_node_path6.default.join(process.cwd(), "mcp", "widget.html"), "utf8");
+  const manifest = JSON.parse(await (0, import_promises6.readFile)(import_node_path6.default.join(pluginRoot, ".codex-plugin", "plugin.json"), "utf8"));
+  const widget = await (0, import_promises6.readFile)(import_node_path6.default.join(pluginRoot, "mcp", "widget.html"), "utf8");
   if (manifest.name !== "code80-image") throw new Error("\u63D2\u4EF6\u6E05\u5355\u540D\u79F0\u9519\u8BEF\u3002");
   if (manifest.version !== "0.1.4") throw new Error("\u8FD0\u884C\u65F6\u7248\u672C\u4E0E\u63D2\u4EF6\u6E05\u5355\u4E0D\u4E00\u81F4\u3002");
   if (widget.length < 1e4) throw new Error("\u63D2\u4EF6\u754C\u9762\u6784\u5EFA\u4EA7\u7269\u4E0D\u5B8C\u6574\u3002");
@@ -29722,6 +29729,7 @@ async function main() {
 `);
     return;
   }
+  assertSupportedRuntime();
   if (process.argv.includes("--self-test")) {
     await selfTest();
     return;
@@ -29731,7 +29739,7 @@ async function main() {
   const settings = new SettingsService(layout, createCredentialVault(layout));
   const batches = new BatchService(layout, settings);
   await batches.initialize();
-  const widgetHtml = await (0, import_promises6.readFile)(import_node_path6.default.join(process.cwd(), "mcp", "widget.html"), "utf8");
+  const widgetHtml = await (0, import_promises6.readFile)(import_node_path6.default.join(pluginRoot, "mcp", "widget.html"), "utf8");
   const server = createCode80ImageServer({ version: "0.1.4", widgetHtml, settings, batches });
   await server.connect(new StdioServerTransport());
   process.stderr.write(`Code80 Image ${"0.1.4"} ready at ${layout.root}
